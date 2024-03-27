@@ -14,6 +14,13 @@
     - inventory_hostname not in groups['kvmhost']
     - inventory_hostname not in hostvars[kvmhost].result_all_vms.list_vms
   delegate_to: "{{ kvmhost }}"
+  # retries: 10
+  # delay: 5
+  # until: result_stat_boot.stat.exists
+
+- name: Debug virt_infra_disks
+  debug:
+    msg: "inventory_hostname: {{ inventory_hostname }}  virt_infra_disks: {{ virt_infra_disks }}"
 
 - name: Check if boot disk is set to keep
   set_fact:

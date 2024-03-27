@@ -1,21 +1,40 @@
 #cloud-config
-# Set the default user
-system_info:
-  default_user:
-    name: {{ virt_infra_user | default(hostvars[kvmhost].ansible_env.USER) }}
+# # Set the default user
+# system_info:
+#   default_user:
+#     name: {{ virt_infra_user | default(hostvars[kvmhost].ansible_env.USER) }}
 
-# Unlock the default user
-chpasswd:
-  list: |
-     {{ virt_infra_user | default(hostvars[kvmhost].ansible_env.USER) }}:{{ virt_infra_password | default(virt_infra_password) }}
-  expire: False
+users:
+  - default
+  - name: {{ virt_infra_user | default(hostvars[kvmhost].ansible_env.USER) }}
+    lock_passwd: false
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+{% if virt_infra_distro == 'ubuntu' %}
+    groups: [adm, cdrom, dip, lxd, sudo]
+{% else %}
+    groups: [users, admin]
+{% endif %}
+    hashed_passwd: "{{ virt_infra_password | default(virt_infra_password) }}"
+    # ssh_pwauth: True
+    # chpasswd: { expire: False }
+    ssh_authorized_keys:
+{% for key in virt_infra_ssh_keys | default(hostvars[kvmhost].virt_infra_ssh_keys, true) %}
+      - {{ key }}
+{% endfor %}
+
+# # Unlock the default user
+# chpasswd:
+#   list: |
+#      {{ virt_infra_user | default(hostvars[kvmhost].ansible_env.USER) }}:{{ virt_infra_password | default(virt_infra_password) }}
+#   expire: False
 
 # System settings
 resize_rootfs: True
-ssh_pwauth: "{{ virt_infra_ssh_pwauth | default(True) }}"
-ssh_authorized_keys:
+ssh_pwauth: {{ virt_infra_ssh_pwauth | default(True) }}
+# ssh_authorized_keys:
 {% for key in virt_infra_ssh_keys | default(hostvars[kvmhost].virt_infra_ssh_keys, true) %}
-  - {{ key }}
+#   - {{ key }}
 {% endfor %}
 timezone: {{ virt_infra_timezone | default(hostvars[kvmhost].virt_infra_timezone, true) }}
 {% if virt_infra_root_password is defined and virt_infra_root_password %}

@@ -1,9 +1,27 @@
 ---
 # Only run on KVM host
+
+- name: General debug virt_infra_host_networks
+  debug:
+    msg: "virt_infra_host_networks: {{ virt_infra_host_networks }}"
+
+- name: General debug groups kvmhost
+  debug:
+    msg: "groups['kvmhost']: {{ groups['kvmhost'] }} || inventory_hostname: {{ inventory_hostname }}"
+
+- name: Detailed debug virt_infra_host_networks
+  debug:
+    msg: "name: {{ item.name }}  ||  type: {{ item.type }}  || ip_address: {{ item.ip_address }}"
+  with_items: "{{ virt_infra_host_networks.present }}"
+  when:
+    - inventory_hostname in groups['kvmhost']
+    - item.type is not defined or (item.type is defined and item.type != "bridge")
+    - item.name is defined
+
 - name: Define networks
   virt_net:
     command: define
-    autostart: yes
+    # autostart: yes
     name: "{{ item.name }}"
     xml: '{{ lookup("template", "templates/virt-network.j2") }}'
     uri: "{{ virt_infra_host_libvirt_url }}"

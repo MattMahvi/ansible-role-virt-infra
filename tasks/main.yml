@@ -1,12 +1,23 @@
 ---
+- debug:
+    msg: "CHECK: {{ CHECK }}"
 - include_tasks: validations-initial.yml
 - include_tasks: validations.yml
 - include_tasks: defaults-get.yml
 - include_tasks: virt-list.yml
+- fail:
+    msg: "Die"
 - include_tasks: net-list.yml
 - include_tasks: net-remove.yml
 - include_tasks: net-create.yml
 - include_tasks: pool-create.yml
+  vars:
+    pool_name: "default"
+    pool_path: "{{ virt_infra_host_image_path_default }}"
+- include_tasks: pool-create.yml
+  vars:
+    pool_name: "{{ virt_infra_host_pool_name }}"
+    pool_path: "{{ virt_infra_host_image_path }}"
 - include_tasks: disk-create.yml
 - include_tasks: virt-create.yml
 - include_tasks: vbmc-create.yml

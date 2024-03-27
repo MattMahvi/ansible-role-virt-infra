@@ -64,6 +64,27 @@
     - hostvars[inventory_hostname].virt_infra_ssh_keys is not defined
     - result_ssh_key_gen.public_key is defined and result_ssh_key_gen.public_key
 
+# Append virt_infra_ssh_keys_add[] to virt_infra_ssh_keys
+- name: Add additional SSH keys to KVM host default for cloud-init
+  set_fact:
+    virt_infra_ssh_keys: "{{ virt_infra_ssh_keys + [ item ] }}"
+  with_items: "{{ virt_infra_ssh_keys_add }}"
+  when:
+    - inventory_hostname in groups['kvmhost']
+    - virt_infra_ssh_keys_add is defined
+    - virt_infra_ssh_keys_add | length > 0
+
+
+- name: Debug virt_infra_ssh_keys
+  debug:
+    var: virt_infra_ssh_keys
+  when:
+    - inventory_hostname in groups['kvmhost']
+
+# fail
+# - fail:
+#     msg: "Die"
+
 # Get timezone from KVM host to use as defaults for cloud-init
 # This is only used if no timezone is specified
 # Unfortunately can't use date from "{{ hostvars[kvmhost].ansible_date_time.tz }}"

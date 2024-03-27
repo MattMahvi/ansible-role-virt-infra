@@ -389,6 +389,13 @@
         - virt_infra_vbmc
       become: true
 
+    - name: debug result_virtualbmc
+      debug:
+        msg: "result_virtualbmc: {{ result_virtualbmc }}"
+      when:
+        - inventory_hostname in groups['kvmhost']
+        - virt_infra_vbmc
+
     - name: "KVM host only: Advise unable to start virtualbmc"
       set_fact:
         validations_failed: "{{ validations_failed|default([]) + ['KVM host: Failed to start and enable virtualbmc'] }}"
@@ -458,6 +465,10 @@
         path: "{{ hostvars[kvmhost].virt_infra_host_image_path | default(virt_infra_host_image_path) }}/{{ virt_infra_distro_image }}"
       register: result_base_image
       delegate_to: "{{ kvmhost }}"
+      when:
+        - inventory_hostname not in groups['kvmhost']
+
+    - include_tasks: validation-image.yml
       when:
         - inventory_hostname not in groups['kvmhost']
 

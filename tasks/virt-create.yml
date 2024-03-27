@@ -109,7 +109,7 @@
     | awk -F "/" '{print $1}'
   register: result_get_ip
   until: result_get_ip.stdout
-  retries: 30
+  retries: 200
   delay: 10
   become: true
   delegate_to: "{{ kvmhost }}"

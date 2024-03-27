@@ -11,6 +11,12 @@
   when:
     - inventory_hostname in groups['kvmhost']
 
+- name: Debug result_pool_list
+  debug:
+    var: result_pool_list
+  when:
+    - inventory_hostname in groups['kvmhost']
+
 - name: Get info on storage pools
   virt_pool:
     command: info
@@ -19,33 +25,60 @@
   when:
     - inventory_hostname in groups['kvmhost']
 
-- name: Define storage pool
+- name: "Define storage pool {{ pool_name }}: {{ pool_path }}"
   virt_pool:
     command: define
-    name: default
+    name: "{{ pool_name }}"
+    # name: default
     xml: '{{ lookup("template", "virt-pool.j2") }}'
   register: result_pool_define
   become: true
   when:
     - inventory_hostname in groups['kvmhost']
-    - '"default" not in result_pool_list'
+    - 'pool_name not in result_pool_list'
+    # - '"default" not in result_pool_list'
+  ignore_errors: yes
 
-- name: Build storage pool
+- name: Check for specific error and fail if necessary
+  fail:
+    msg: "The task failed for an unexpected reason: {{ result_pool_define.msg }}"
+  when:
+    - inventory_hostname in groups['kvmhost']
+    - result_pool_define is defined
+    - result_pool_define.failed
+    - "'Storage source conflict with pool' not in result_pool_define.msg"
+  become: true
+
+# - name: Check for specific error and fail if necessary
+#   fail:
+#     msg: "The task failed for an unexpected reason: {{ result_pool_define.msg }}"
+#   when:
+#     - result_pool_define is defined
+#     - result_pool_define.failed
+#     - "'Storage source conflict with pool' not in result_pool_define.msg"
+#   become: true
+#   when:
+#     - inventory_hostname in groups['kvmhost']
+
+- name: "Build storage pool {{ pool_name }}"
   virt_pool:
     command: build
-    name: default
+    name: "{{ pool_name }}"
+    # name: default
   become: true
   register: result_pool_build
   when:
     - inventory_hostname in groups['kvmhost']
-    - '"default" in result_pool_list'
+    - 'pool_name in result_pool_list'
+    # - '"default" in result_pool_list'
     - result_pool_info.pools.default.state != 'active'
   ignore_errors: true
 
-- name: Ensure storage pool is active
+- name: "Ensure storage pool is active {{ pool_name }}"
   virt_pool:
     state: "active"
-    name: "default"
+    name: "{{ pool_name }}"
+    # name: "default"
   become: true
   register: result_pool_activate
   when:

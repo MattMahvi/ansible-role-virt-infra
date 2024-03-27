@@ -1,0 +1,69 @@
+---
+# - name: "KVM host: Check if image checksum file is present"
+#   become: yes
+#   stat:
+#     path: "{{ virt_infra_host_image_path }}/{{ virt_infra_distro_image }}.sha256"
+#   register: checksum_file
+#   delegate_to: "{{ kvmhost }}"
+#   when:
+#     - inventory_hostname not in groups['kvmhost']
+#     - virt_infra_distro_image_checksum_url is defined
+
+# - name: "KVM host: Download image checksum file"
+#   become: yes
+#   get_url:
+#     url: "{{ virt_infra_distro_image_checksum_url }}"
+#     dest: "{{ virt_infra_host_image_path }}/{{ virt_infra_distro_image }}.sha256"
+#     force: no
+#   register: checksum_download
+#   delegate_to: "{{ kvmhost }}"
+#   when:
+#     - inventory_hostname not in groups['kvmhost']
+#     - virt_infra_distro_image_checksum_url is defined
+#     - not checksum_file.stat.exists
+
+# - name: "KVM host: Check checksum of existing image"
+#   become: yes
+#   command: "sha256sum --ignore-missing -c {{ virt_infra_host_image_path }}/{{ virt_infra_distro_image }}.sha256"
+#   args:
+#     chdir: "{{ virt_infra_host_image_path }}"
+#   register: checksum_result
+#   ignore_errors: yes
+#   delegate_to: "{{ kvmhost }}"
+#   when:
+#     - inventory_hostname not in groups['kvmhost']
+#     - checksum_download is changed or checksum_file.stat.exists
+
+- name: "KVM host: Download distro image"
+  become: yes
+  environment:
+    OBJC_DISABLE_INITIALIZE_FORK_SAFETY: "YES"
+  get_url:
+    url: "{{ virt_infra_distro_image_url }}"
+    dest: "{{ virt_infra_host_image_path }}/{{ virt_infra_distro_image }}"
+    # checksum: "sha256:{{ lookup('url', virt_infra_distro_image_checksum_url, wantlist=False, split_lines=False) | regex_search('^[^\\s]+') }}"
+    force: yes
+    validate_certs: no
+  delegate_to: "{{ kvmhost }}"
+  when:
+    - inventory_hostname not in groups['kvmhost']
+    - not result_base_image.stat.exists
+    # - not result_base_image.stat.exists or checksum_result is failed
+
+# - name: "KVM host: Delete incorrect checksum file (if download/redownload was needed)"
+#   become: yes
+#   file:
+#     path: "{{ virt_infra_host_image_path }}/{{ virt_infra_distro_image }}.sha256"
+#     state: absent
+#   delegate_to: "{{ kvmhost }}"
+#   when:
+#     - inventory_hostname not in groups['kvmhost']
+#     - not result_base_image.stat.exists or checksum_result is failed
+
+- name: "KVM host: Test for distro images final"
+  stat:
+    path: "{{ hostvars[kvmhost].virt_infra_host_image_path | default(virt_infra_host_image_path) }}/{{ virt_infra_distro_image }}"
+  register: result_base_image
+  delegate_to: "{{ kvmhost }}"
+  when:
+    - inventory_hostname not in groups['kvmhost']
