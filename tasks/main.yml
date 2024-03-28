@@ -1,12 +1,29 @@
 ---
 - debug:
-    msg: "CHECK: {{ CHECK }}"
+    msg: "CHECK_MODE: {{ CHECK_MODE }}"
 - include_tasks: validations-initial.yml
 - include_tasks: validations.yml
 - include_tasks: defaults-get.yml
 - include_tasks: virt-list.yml
-- fail:
-    msg: "Die"
+
+# In vms-install.yml
+
+- name: Output VM information in check mode
+- block:
+  - name: Output running VMs as JSON
+    ansible.builtin.debug:
+      msg: "{{ result_running_vms | to_nice_json }}"
+    when: result_running_vms is defined
+
+  - name: Output info VMs as JSON
+    ansible.builtin.debug:
+      msg: "{{ result_info_vms | to_nice_json }}"
+    when: result_info_vms is defined
+
+  - name: End playbook if in check mode
+    meta: end_play
+  when: CHECK_MODE | default(false) | bool
+
 - include_tasks: net-list.yml
 - include_tasks: net-remove.yml
 - include_tasks: net-create.yml
