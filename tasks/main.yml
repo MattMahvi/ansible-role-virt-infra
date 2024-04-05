@@ -1,6 +1,31 @@
 ---
-- debug:
-    msg: "CHECK_MODE: {{ CHECK_MODE }}"
+# pip install virtualbmc on kvmhost groups only
+- name: pip install virtualbmc
+  pip:
+    name: virtualbmc
+    state: present
+  when:
+    - inventory_hostname in groups['kvmhost']
+
+- name: Ensure virt_infra_host_image_path directory exists
+  file:
+    path: "{{ virt_infra_host_image_path }}"
+    state: directory
+    mode: '0755'
+  when:
+    - inventory_hostname in groups['kvmhost']
+
+# - name: die
+#   fail:
+#     msg: "Die"
+
+# - debug:
+#     msg: "CHECK_MODE: {{ CHECK_MODE }}"
+
+# - name: Output VM information in check mode
+#   debug:
+#     msg: "{{ inventory_hostname }} -- {{ hostvars[inventory_hostname] }}"
+
 - include_tasks: validations-initial.yml
 - include_tasks: validations.yml
 - include_tasks: defaults-get.yml
@@ -8,21 +33,79 @@
 
 # In vms-install.yml
 
-- name: Output VM information in check mode
-- block:
-  - name: Output running VMs as JSON
-    ansible.builtin.debug:
-      msg: "{{ result_running_vms | to_nice_json }}"
-    when: result_running_vms is defined
+# - name: Output VM information in check mode
+#   block:
+#     # - name: Output running VMs as JSON
+#     #   ansible.builtin.debug:
+#     #     msg: "{{ result_running_vms }}"
+#     #     # msg: "{{ result_running_vms | to_nice_json }}"
+#     #   when: result_running_vms is defined
 
-  - name: Output info VMs as JSON
-    ansible.builtin.debug:
-      msg: "{{ result_info_vms | to_nice_json }}"
-    when: result_info_vms is defined
+#     # - name: Output info VMs as JSON
+#     #   ansible.builtin.debug:
+#     #     msg: "{{ result_info_vms }}"
+#     #     # msg: "{{ result_info_vms | to_nice_json }}"
+#     #   when: result_info_vms is defined
 
-  - name: End playbook if in check mode
-    meta: end_play
-  when: CHECK_MODE | default(false) | bool
+#     - name: Gather running VMs
+#       set_fact:
+#         vms_running: "{{ result_info_vms | dict2items | selectattr('value', 'mapping') | map(attribute='key') | list }}"
+#         # running_vms: "{{ result_info_vms | dict2items | selectattr('value', 'not string') | map(attribute='key') | list }}"
+#         # running_vms: "{{ result_info_vms.keys() }}"
+#       when: result_info_vms is defined
+
+#     # - name: Debug running_vms
+#     #   debug:
+#     #     msg: "Running VMS: {{ running_vms }}"
+
+#     - name: Gather VMs to be deployed
+#       set_fact:
+#         vms_target: "{{ groups[lookup('env', 'IVCLOUD_ANSIBLE_GROUP')] }}"
+
+#     - name: Identify VMs to delete (running but not in target)
+#       set_fact:
+#         vms_to_delete: "{{ vms_running | difference(vms_target) }}"
+
+#     - name: Identify VMs to add (in target but not running)
+#       set_fact:
+#         vms_to_add: "{{ vms_target | difference(vms_running) }}"
+
+#     - name: Output our vm control variables
+#       debug:
+#         msg: "{{ item.key }}: {{ item.value | join(' ') }}"
+#       with_dict:
+#         vms_running: "{{ vms_running }}"
+#         vms_target: "{{ vms_target }}"
+#         vms_to_delete: "{{ vms_to_delete }}"
+#         vms_to_add: "{{ vms_to_add }}"
+#       changed_when: false
+
+#     # - name: Output our vm control variables
+#     #   debug:
+#     #     msg: "{{ item }}: {{ hostvars[item] }}"
+#     #   loop:
+#     #     - running_vms
+#     #     - target_vms
+#     #     - vms_to_delete
+#     #     - vms_to_add
+
+#     # - name: Output VMs to delete
+#     #   debug:
+#     #     msg: "Delete VMs: {{ vms_to_delete }}"
+
+#     # - name: Output VMs to add
+#     #   debug:
+#     #     msg: "Add VMs: {{ vms_to_add }}"
+
+#     - name: End playbook if in check mode
+#       meta: end_play
+#   when: 
+#     - inventory_hostname in groups['kvmhost']
+
+# - name: End playbook if in check mode
+#   meta: end_play
+#   when: 
+#     - CHECK_MODE | default(false) | bool
 
 - include_tasks: net-list.yml
 - include_tasks: net-remove.yml
