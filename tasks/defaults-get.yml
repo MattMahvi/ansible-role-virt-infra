@@ -5,22 +5,22 @@
   when:
     - inventory_hostname in groups['kvmhost']
 
-- name: "Ensure destination directory is clean before sync"
-  ansible.builtin.file:
-    path: "{{ IVCLOUD_CREDENTIALS_GENERATED_ANSIBLE_PATH }}"
-    state: absent
-  when:
-    - inventory_hostname in groups['kvmhost']
+# - name: "Ensure destination directory is clean before sync"
+#   ansible.builtin.file:
+#     path: "{{ IVCLOUD_CREDENTIALS_GENERATED_ANSIBLE_PATH }}"
+#     state: absent
+#   when:
+#     - inventory_hostname in groups['kvmhost']
 
-- name: "Copy SSH keys to remote system for kvmhost group"
-  synchronize:
-    src: "{{ IVCLOUD_CREDENTIALS_GENERATED_PATH }}/"
-    dest: "{{ IVCLOUD_CREDENTIALS_GENERATED_ANSIBLE_PATH }}/"
-    recursive: yes
-    delete: yes
-  delegate_to: localhost  # Performs the operation on the local host
-  when:
-    - inventory_hostname in groups['kvmhost']
+# - name: "Copy SSH keys to remote system for kvmhost group"
+#   synchronize:
+#     src: "{{ IVCLOUD_CREDENTIALS_GENERATED_PATH }}/"
+#     dest: "{{ IVCLOUD_CREDENTIALS_GENERATED_ANSIBLE_PATH }}/"
+#     recursive: yes
+#     delete: yes
+#   delegate_to: localhost  # Performs the operation on the local host
+#   when:
+#     - inventory_hostname in groups['kvmhost']
 
 
 # Use SSH keys on KVM host to use as defaults for cloud-init
