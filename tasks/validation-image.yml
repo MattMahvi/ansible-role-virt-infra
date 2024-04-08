@@ -34,6 +34,18 @@
 #     - inventory_hostname not in groups['kvmhost']
 #     - checksum_download is changed or checksum_file.stat.exists
 
+- name: Debug relevant vars
+  debug:
+    msg: "{{ inventory_hostname }} ---- {{ item.key }}: {{ item.value }}"
+  with_dict:
+    virt_infra_distro_image_url: "{{ virt_infra_distro_image_url | default(omit) }}"
+    virt_infra_distro_image: "{{ virt_infra_distro_image | default(omit) }}"
+    virt_infra_host_image_path: "{{ virt_infra_host_image_path | default(omit) }}"
+  delegate_to: "{{ kvmhost }}"
+  when:
+    - inventory_hostname not in groups['kvmhost']
+    - result_base_image is defined and not result_base_image.stat.exists
+
 - name: "KVM host (delegated for VM): Download distro image"
   become: yes
   environment:

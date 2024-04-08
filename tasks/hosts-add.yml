@@ -34,15 +34,21 @@
       Host {{ vm_ip }} {{ inventory_hostname }}
         Hostname  {{ vm_ip }}
         User {{ virt_infra_user | default(hostvars[kvmhost].ansible_env.USER) }}
-      {% if virt_infra_ssh_keys is not defined or virt_infra_ssh_keys is defined and not virt_infra_ssh_keys %}
       {% if hostvars[kvmhost].result_ssh_key_list.files is defined and hostvars[kvmhost].result_ssh_key_list.files %}
       {% for file in hostvars[kvmhost].result_ssh_key_list.files %}
       {{ "  IdentityFile " + file.path.split('.pub')[0] }}
       {% endfor %}
-      {% elif hostvars[kvmhost].result_ssh_key_gen.filename is defined and hostvars[kvmhost].result_ssh_key_gen.filename %}
-      {{ "  IdentityFile " + hostvars[kvmhost].result_ssh_key_gen.filename.split('.pub')[0] }}
       {% endif %}
-      {% endif %}
+
+      # {% if virt_infra_ssh_keys is not defined or virt_infra_ssh_keys is defined and not virt_infra_ssh_keys %}
+      # {% if hostvars[kvmhost].result_ssh_key_list.files is defined and hostvars[kvmhost].result_ssh_key_list.files %}
+      # {% for file in hostvars[kvmhost].result_ssh_key_list.files %}
+      # {{ "  IdentityFile " + file.path.split('.pub')[0] }}
+      # {% endfor %}
+      # {% elif hostvars[kvmhost].result_ssh_key_gen.filename is defined and hostvars[kvmhost].result_ssh_key_gen.filename %}
+      # {{ "  IdentityFile " + hostvars[kvmhost].result_ssh_key_gen.filename.split('.pub')[0] }}
+      # {% endif %}
+      # {% endif %}
   become: false
   delegate_to: "{{ kvmhost }}"
   when:
