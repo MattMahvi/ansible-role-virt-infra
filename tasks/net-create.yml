@@ -38,11 +38,69 @@
     name: "{{ item.name }}"
     uri: "{{ virt_infra_host_libvirt_url }}"
   become: true
-  with_items: "{{ virt_infra_host_networks.present }}"
+  loop: "{{ virt_infra_host_networks.present }}"
   when:
     - inventory_hostname in groups['kvmhost']
     - item.type is not defined or (item.type is defined and item.type != "bridge")
     - item.name is defined
+  register: network_start
+  ignore_errors: true
+
+- name: Remove network if already in use
+  virt_net:
+    state: absent
+    name: "{{ item.item.name }}"
+    uri: "{{ virt_infra_host_libvirt_url }}"
+  become: true
+  loop: "{{ network_start.results }}"
+  when:
+    - item.failed | default(false)
+    - "'Network is already in use by interface' in item.msg"
+
+- name: Retry starting networks after removal
+  virt_net:
+    state: active
+    name: "{{ item.item.name }}"
+    uri: "{{ virt_infra_host_libvirt_url }}"
+  become: true
+  loop: "{{ network_start.results }}"
+  when:
+    - item.failed | default(false)
+    - "'Network is already in use by interface' in item.msg"
+
+# - name: Remove network if already in use
+#   virt_net:
+#     state: absent
+#     name: "{{ item.item.name }}"
+#     uri: "{{ virt_infra_host_libvirt_url }}"
+#   become: true
+#   loop: "{{ network_start.results }}"
+#   when:
+#     - item.failed
+#     - "'Network is already in use by interface' in item.msg"
+
+# - name: Retry starting networks after removal
+#   virt_net:
+#     state: active
+#     name: "{{ item.item.name }}"
+#     uri: "{{ virt_infra_host_libvirt_url }}"
+#   become: true
+#   loop: "{{ network_start.results }}"
+#   when:
+#     - item.failed
+#     - "'Network is already in use by interface' in item.msg"
+
+# - name: Start networks
+#   virt_net:
+#     state: active
+#     name: "{{ item.name }}"
+#     uri: "{{ virt_infra_host_libvirt_url }}"
+#   become: true
+#   with_items: "{{ virt_infra_host_networks.present }}"
+#   when:
+#     - inventory_hostname in groups['kvmhost']
+#     - item.type is not defined or (item.type is defined and item.type != "bridge")
+#     - item.name is defined
 
 - name: Autostart networks
   virt_net:
