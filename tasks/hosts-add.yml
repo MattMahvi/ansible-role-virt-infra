@@ -23,6 +23,12 @@
 #  with_items: "{{ play_hosts }}"
 #  run_once: true
 
+# - name: Debug ansible_env
+#   debug:
+#     msg: "{{ inventory_hostname }} --- kvmhost: {{ kvmhost }} --- hostvars[kvmhost].ansible_env: {{ hostvars[kvmhost].ansible_env }}"
+#   when:
+#     - inventory_hostname not in groups['kvmhost']
+
 - name: Add host to SSH config
   blockinfile:
     create: true
