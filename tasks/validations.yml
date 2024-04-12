@@ -485,6 +485,17 @@
         - not result_base_image.stat.exists
       changed_when: true
 
+    - name: Debug some useful virt vars
+      debug:
+        msg: "{{ inventory_hostname }} -- {{ item.key }}: {{ item.value }}"
+      with_dict:
+        virt_infra_host_networks: "{{ hostvars[kvmhost].virt_infra_host_networks | default('unknown') }}"
+        virt_infra_networks: "{{ virt_infra_networks }}"
+        virt_infra_state: "{{ virt_infra_state }}"
+        kvmhost: "{{ kvmhost | default('unknown') }}"
+      when:
+        - inventory_hostname not in groups['kvmhost']
+
     - name: "Guests: Check required network is to be removed"
       set_fact:
         validations_failed: "{{ validations_failed|default([]) + [ item.name + ' network required, but would be removed' ] }}"
