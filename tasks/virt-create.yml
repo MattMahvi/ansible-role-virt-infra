@@ -124,7 +124,7 @@
   set_fact:
     vm_ip: "{{ result_get_ip.stdout }}"
     access_ip: "{{ result_get_ip.stdout }}"
-    public_ip: "{{ hostvars[kvmhost].ansible_meta.usable_addresses[(virt_public_ip_idx | int)].split('/')[0] }}"
+    public_ip: "{{ hostvars[kvmhost].ansible_meta.usable_addresses[(virt_public_ip_idx | default(0) | int)].split('/')[0] | trim }}"
   when:
     - inventory_hostname not in groups['kvmhost']
     - virt_infra_state == "running"
