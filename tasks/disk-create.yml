@@ -157,6 +157,49 @@
     - virt_infra_network_config is defined and virt_infra_network_config
   delegate_to: "{{ kvmhost }}"
 
+
+
+- name: "[DEBUG, CLOUD, INIT, RUN] cloud-init meta-data"
+  command: cat "{{ result_tempdir.path }}/meta-data"
+  register: meta_data_contents
+  become: true
+  delegate_to: "{{ kvmhost }}"
+  changed_when: false
+  ignore_errors: yes
+
+- name: "[DEBUG, CLOUD, INIT, RUN] cloud-init user-data"
+  command: cat "{{ result_tempdir.path }}/user-data"
+  register: user_data_contents
+  become: true
+  delegate_to: "{{ kvmhost }}"
+  changed_when: false
+  ignore_errors: yes
+
+- name: "[DEBUG, CLOUD, INIT, RUN] cloud-init network-config"
+  command: cat "{{ result_tempdir.path }}/network-config"
+  register: network_config_contents
+  become: true
+  delegate_to: "{{ kvmhost }}"
+  changed_when: false
+  ignore_errors: yes
+
+- name: "[DEBUG, CLOUD, INIT] Display cloud-init meta-data contents"
+  debug:
+    msg: "{{ meta_data_contents.stdout }}"
+  when: meta_data_contents is defined and meta_data_contents.stdout is defined and meta_data_contents.stdout != ""
+
+- name: "[DEBUG, CLOUD, INIT] Display cloud-init user-data contents"
+  debug:
+    msg: "{{ user_data_contents.stdout }}"
+  when: user_data_contents is defined and user_data_contents.stdout is defined and user_data_contents.stdout != ""
+
+- name: "[DEBUG, CLOUD, INIT] Display cloud-init network-config contents"
+  debug:
+    msg: "{{ network_config_contents.stdout }}"
+  when: network_config_contents is defined and network_config_contents.stdout is defined and network_config_contents.stdout != ""
+
+
+
 - name: Make cloud-init iso for guest
   shell: >
     {{ hostvars[kvmhost].virt_infra_mkiso_cmd | default(virt_infra_mkiso_cmd) }} -J -l -R -V "cidata" -iso-level 4
